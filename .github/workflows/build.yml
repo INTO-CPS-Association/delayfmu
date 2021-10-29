@@ -53,21 +53,21 @@ jobs:
           uses: actions/upload-artifact@v2
           with:
             name: delayfmu.dylib
-            path: libdelayfmu.dylib
+            path: delayfmu.dylib
 
         - name: Upload artifact linux 
           if: matrix.os == 'ubuntu-latest'
           uses: actions/upload-artifact@v2
           with:
             name: delayfmu.so
-            path: libdelayfmu.so
+            path: delayfmu.so
 
         - name: Upload artifact windows
           if: matrix.os == 'windows-latest'
           uses: actions/upload-artifact@v2
           with:
             name: delayfmu.dll
-            path: libdelayfmu.dll
+            path: delayfmu.dll
 
         - name: Upload modelDescription.xml
           if: matrix.os == 'ubuntu-latest'

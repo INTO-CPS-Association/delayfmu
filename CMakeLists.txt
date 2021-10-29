@@ -14,5 +14,5 @@ file(GLOB_RECURSE C_FILES src/*.c)
 add_library(delayfmu SHARED
         ${CPP_FILES}
         ${C_FILES})
-
+set_target_properties(delayfmu PROPERTIES PREFIX "")
 target_include_directories(delayfmu PRIVATE src/fmi2_0_2-headers)

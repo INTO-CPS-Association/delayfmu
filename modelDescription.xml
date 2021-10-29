@@ -22,7 +22,7 @@
         </ScalarVariable>
         <!-- Index 2 -->
         <ScalarVariable name="output" valueReference="1" variability="discrete" causality="output">
-            <Real start="0.0"/>
+            <Real/>
         </ScalarVariable>
         <!-- Index 3 -->
         <ScalarVariable name="input" valueReference="2" variability="discrete" causality="input">
@@ -34,6 +34,9 @@
         <Outputs>
             <Unknown index="2"/>
         </Outputs>
+        <InitialUnknowns>
+            <Unknown index="2"/>
+        </InitialUnknowns>
     </ModelStructure>
 
 
