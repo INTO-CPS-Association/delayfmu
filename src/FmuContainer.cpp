@@ -4,6 +4,7 @@
 #include <utility>
 #include <thread>
 #include <chrono>
+#include <iostream>
 /* LOGGING EXAMPLE
  *
  * FmuContainer_LOG(fmi2OK, "logAll",
@@ -134,14 +135,27 @@ bool FmuContainer::getBoolean(const fmi2ValueReference *vr, size_t nvr, fmi2Bool
 }
 
 bool FmuContainer::getInteger(const fmi2ValueReference *vr, size_t nvr, fmi2Integer *value) {
-    if (nvr > 0){
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger is invalid. There are no integers.","");
+    size_t expected_nvr = 1;
+    if (nvr != expected_nvr)
+    {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger received invalid arguments. nvr expected: %zu , actual: %zu. ",
+                         expected_nvr, nvr);
         return false;
     }
     else {
+        for(int i = 0; i < expected_nvr; i++){
+            if(vr[i] == sleepParameterId)
+            {
+                value[i]=this->sleep;
+            }
+            else {
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger received invalid arguments. Value references allowed: %i, actual: %i. ",
+                                 sleepParameterId, vr[i]);
+                return false;
+            }
+        }
         return true;
-    }
-}
+}}
 
 bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *value) {
 
@@ -156,7 +170,7 @@ bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *v
             if(vr[i] == outputRealId)
                 value[i] = this->realOutput;
             else {
-                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: 1, actual: %i. ",
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getReal received invalid arguments. Value references allowed: 1, actual: %i. ",
                                  vr[i]);
                 return false;
             }
@@ -204,11 +218,14 @@ bool FmuContainer::setInteger(const fmi2ValueReference *vr, size_t nvr, const fm
     }
     else {
         for(int i = 0; i < expected_nvr; i++){
+            std::cout << vr[i] << std::endl;
             if(vr[i] == sleepParameterId)
+            {
                 this->sleep = value[i];
+            }
             else {
                 FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: %i, actual: %i. ",
-                                 sleepParameterId, vr[i]);
+                                 sleepParameterId,vr[i]);
                 return false;
             }
         }

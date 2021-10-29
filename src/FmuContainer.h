@@ -16,8 +16,9 @@ const int outputRealInitial = 0.0;
  * These are the scalar variable IDs
  */
 const int sleepParameterId = 0;
-const int inputRealId = 1;
-const int outputRealId = 2;
+const int outputRealId = 1;
+const int inputRealId = 2;
+
 
 using namespace std;
 
