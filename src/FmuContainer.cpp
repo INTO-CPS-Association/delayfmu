@@ -254,7 +254,7 @@ bool FmuContainer::setString(const fmi2ValueReference *vr, size_t nvr, const fmi
 }
 
 bool FmuContainer::beginInitialize() {
-    if(!isStateValid(FMIState::initializing, this->state))
+    if(!isStateValid(FMIState::instantiated, this->state))
     {
         return false;
     }
