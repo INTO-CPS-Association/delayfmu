@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <thread>
+#include <chrono>
 /* LOGGING EXAMPLE
  *
  * FmuContainer_LOG(fmi2OK, "logAll",
@@ -22,9 +23,38 @@
     fprintf(stderr, "\n");                                             \
   }
 
+std::string printFMIState(FMIState state){
+    switch (state) {
+        case FMIState::initializing:
+            return "initializing";
+        case FMIState::instantiated:
+            return "instantiated";
+        case FMIState::initialized:
+            return "initialized";
+        case FMIState::error:
+            return "error";
+        case FMIState::terminated:
+            return "terminated";
+
+    }
+}
+
+bool FmuContainer::isStateValid(FMIState expected, FMIState actual){
+    if(expected != actual ) {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal",
+                         "FMU is in the wrong state. Expected state: %s - Actual state: %s",
+                         printFMIState(expected).c_str(), printFMIState(actual).c_str());
+        this->state = FMIState::error;
+        return false;
+    }
+    else {return true;}
+}
+
+
 
 FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginOn, const char *mName)
         : m_functions(mFunctions), m_name(mName), loggingOn(logginOn){
+    this->state = FMIState::instantiated;
 }
 
 FmuContainer::~FmuContainer() {
@@ -41,15 +71,15 @@ bool FmuContainer::isLoggingOn() {
  ###################################################*/
 
 bool FmuContainer::setup(fmi2Real startTime) {
-    if(this->state != FMIState::instantiated){
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "Setup called in the wrong state.",
-                         "");
-        this->state = FMIState::error;
+    if(!isStateValid(FMIState::instantiated, this->state))
+    {
         return false;
     }
+
     if(startTime != 0.0) {
         FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "Expected startTime to be 0.0. Actual start time was: %f",
                          startTime);
+        this->state = FMIState::error;
         return false;
     }
     else {
@@ -66,13 +96,17 @@ bool FmuContainer::terminate() {
 fmi2ComponentEnvironment FmuContainer::getComponentEnvironment() { return (fmi2ComponentEnvironment) this; }
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
-    if(this->state != FMIState::initialized){
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "Step called in the wrong state.",
-                         "");
-        this->state = FMIState::error;
+    if(!isStateValid(FMIState::initialized, this->state))
+    {
         return false;
     }
-    return true;
+    else {
+        this->realOutput = this->realInput;
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds (this->sleep));
+        return true;
+    }
 }
 
 /*####################################################
@@ -90,56 +124,43 @@ bool FmuContainer::fmi2GetMaxStepsize(fmi2Real *size) {
 
 bool FmuContainer::getBoolean(const fmi2ValueReference *vr, size_t nvr, fmi2Boolean *value) {
 
-    // The only valid boolean is 2
-    if(nvr == 1 && vr[0] == outOfSyncId){
-        value[0] = false;
-        return true;
+    if (nvr > 0){
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getBoolean is invalid. There are no booleans.","");
+        return false;
     }
     else {
-        if(nvr != 1){
-            FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getBoolean received invalid arguments. nvr expected: 1, actual: %zu. ",
-                                      nvr);
-        }
-        else {
-            if (vr[0] != outOfSyncId){
-                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getBoolean received invalid arguments. Value references allowed: %i, actual: %i. ",
-                                 outOfSyncId, value[0]);
-            }
-        }
-        return false;
+        return true;
     }
 }
 
 bool FmuContainer::getInteger(const fmi2ValueReference *vr, size_t nvr, fmi2Integer *value) {
-    if (nvr > 2 || nvr == 0)
-    {
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger received invalid arguments. nvr expected: 1 to 2, actual: %zu. ",
-                         nvr);
+    if (nvr > 0){
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger is invalid. There are no integers.","");
         return false;
     }
     else {
-        for(int i = 0; i < nvr; i++){
-
-            if(vr[i] == safeToleranceId)
-                value[i] = 1;
-            else if (vr[i] == realTimeCheckIntervalID)
-                value[i] = 2;
-            else {
-                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: 0 to 1, actual: %i. ",
-                                 vr[i]);
-                return false;
-            }
-        }
         return true;
     }
 }
 
 bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *value) {
-    if (nvr > 0){
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getReal is invalid. There are no reals.","");
+
+    if (nvr != 1)
+    {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger received invalid arguments. nvr expected: 1 , actual: %zu. ",
+                         nvr);
         return false;
     }
     else {
+        for(int i = 0; i < 1; i++){
+            if(vr[i] == outputRealId)
+                value[i] = this->realOutput;
+            else {
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: 1, actual: %i. ",
+                                 vr[i]);
+                return false;
+            }
+        }
         return true;
     }
 }
@@ -170,38 +191,91 @@ bool FmuContainer::setBoolean(const fmi2ValueReference *vr, size_t nvr, const fm
 }
 
 bool FmuContainer::setInteger(const fmi2ValueReference *vr, size_t nvr, const fmi2Integer *value) {
-
-                    FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: 0 to 1, actual: %i. ",
-                                     1);
-                    return false;
-}
-
-bool FmuContainer::setReal(const fmi2ValueReference *vr, size_t nvr, const fmi2Real *value) {
-    if (nvr > 0){
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setReal is invalid. There are reals to set.","");
+    size_t expected_nvr = 1;
+    if(!isStateValid(FMIState::instantiated, this->state))
+    {
+        return false;
+    }
+    if (nvr != expected_nvr)
+    {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. nvr expected: %zu , actual: %zu. ",
+                         expected_nvr, nvr);
         return false;
     }
     else {
+        for(int i = 0; i < expected_nvr; i++){
+            if(vr[i] == sleepParameterId)
+                this->sleep = value[i];
+            else {
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setInteger received invalid arguments. Value references allowed: %i, actual: %i. ",
+                                 sleepParameterId, vr[i]);
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+bool FmuContainer::setReal(const fmi2ValueReference *vr, size_t nvr, const fmi2Real *value) {
+    size_t expected_nvr = 1;
+    if(!isStateValid(FMIState::initialized, this->state)) {
+        return false;
+    }
+    if (nvr != expected_nvr)
+    {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setReal received invalid arguments. nvr expected: %zu , actual: %zu. ",
+                         expected_nvr, nvr);
+        return false;
+    }
+    else {
+        for(int i = 0; i < expected_nvr; i++){
+
+            if(vr[i] == inputRealId)
+                this->realInput = value[i];
+            else {
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setReal received invalid arguments. Value references allowed: %i, actual: %i. ",
+                                 inputRealId, vr[i]);
+                return false;
+            }
+        }
         return true;
     }
 }
 
 bool FmuContainer::setString(const fmi2ValueReference *vr, size_t nvr, const fmi2String *value) {
-
-                FmuContainer_LOG(fmi2Fatal, "logStatusFatal",
-                                 "setString received invalid arguments. Value references allowed: %i, actual: %i. ",
-                                 webServerHostnameId, vr[0]);
-                return false;
+    if (nvr > 0){
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "setString is invalid. There are strings to set.","");
+        return false;
+    }
+    else {
+        return true;
+    }
 
 }
 
 bool FmuContainer::beginInitialize() {
-return false;
+    if(!isStateValid(FMIState::initializing, this->state))
+    {
+        return false;
+    }
+     else {
+        this->state = FMIState::initializing;
+        return true;
+    }
 }
 
 bool FmuContainer::endInitialize() {
-    return false;
+    if(!isStateValid(FMIState::initializing, this->state))
+    {
+        return false;
+    }
+    else{
+        this->state = FMIState::initialized;
+        return true;
+    }
 }
+
+
 
 
 

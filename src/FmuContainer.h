@@ -11,16 +11,13 @@ using namespace std;
 #include <map>
 #include <ctime>
 
-const int safeToleranceInitial = 10000;
-const int realTimeCheckIntervalInitial = 500;
+const int outputRealInitial = 0.0;
 /*
  * These are the scalar variable IDs
  */
-const int safeToleranceId = 0;
-const int realTimeCheckIntervalID = 1;
-const int outOfSyncId = 2;
-const int webServerHostnameId = 3;
-const int webServerPortId = 4;
+const int sleepParameterId = 0;
+const int inputRealId = 1;
+const int outputRealId = 2;
 
 using namespace std;
 
@@ -77,12 +74,18 @@ public:
     bool endInitialize();
 
 private:
+    int sleep;
+    double realOutput = outputRealInitial;
+    double realInput = 0.0;
+
     FMIState state = FMIState::instantiated;
 
     const bool loggingOn;
 
 
     void destroy();
+
+    bool isStateValid(FMIState expected, FMIState actual);
 };
 
 

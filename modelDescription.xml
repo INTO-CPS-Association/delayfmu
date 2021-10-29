@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription fmiVersion="2.0" modelName="delayfmu" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
+                     generationTool="parameterised delay fmu" numberOfEventIndicators="0" copyright="INTO-CPS"
+                     license="INTO-CPS">
+    <CoSimulation modelIdentifier="delayfmu" needsExecutionTool="false"
+                  canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
+                  maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="false"
+                  canNotUseMemoryManagementFunctions="true" canGetAndSetFMUstate="false" canSerializeFMUstate="false"
+                  providesDirectionalDerivative="false"/>
+
+    <LogCategories>
+        <Category name="logAll"/>
+        <Category name="logFatal"/>
+    </LogCategories>
+
+    <ModelVariables>
+
+        <!-- Index 1 -->
+        <!-- Milliseconds -->
+        <ScalarVariable name="sleep" valueReference="0" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="0"/>
+        </ScalarVariable>
+        <!-- Index 2 -->
+        <ScalarVariable name="output" valueReference="1" variability="discrete" causality="output">
+            <Real start="0.0"/>
+        </ScalarVariable>
+        <!-- Index 3 -->
+        <ScalarVariable name="input" valueReference="2" variability="discrete" causality="input">
+            <Real start="0.0" />
+        </ScalarVariable>
+
+    </ModelVariables>
+    <ModelStructure>
+        <Outputs>
+            <Unknown index="2"/>
+        </Outputs>
+    </ModelStructure>
+
+
+</fmiModelDescription>
