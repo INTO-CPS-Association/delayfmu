@@ -12,6 +12,7 @@ using namespace std;
 #include <ctime>
 
 const int outputRealInitial = 0.0;
+const int inputRealInitial = 0.0;
 /*
  * These are the scalar variable IDs
  */
@@ -77,7 +78,7 @@ public:
 private:
     int sleep;
     double realOutput = outputRealInitial;
-    double realInput = 0.0;
+    double realInput = inputRealInitial;
 
     FMIState state = FMIState::instantiated;
 

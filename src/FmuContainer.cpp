@@ -161,17 +161,20 @@ bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *v
 
     if (nvr != 1)
     {
-        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getInteger received invalid arguments. nvr expected: 1 , actual: %zu. ",
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getReal received invalid arguments. nvr expected: 1 , actual: %zu. ",
                          nvr);
         return false;
     }
     else {
-        for(int i = 0; i < 1; i++){
+        for(int i = 0; i < nvr; i++){
             if(vr[i] == outputRealId)
                 value[i] = this->realOutput;
+            else if (vr[i] == inputRealId){
+                value[i] = this->realInput;
+            }
             else {
-                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getReal received invalid arguments. Value references allowed: 1, actual: %i. ",
-                                 vr[i]);
+                FmuContainer_LOG(fmi2Fatal, "logStatusFatal", "getReal received invalid arguments. Value references allowed: %i and %i, actual: %i. ",
+                                 outputRealId,inputRealId, vr[i]);
                 return false;
             }
         }
@@ -235,7 +238,12 @@ bool FmuContainer::setInteger(const fmi2ValueReference *vr, size_t nvr, const fm
 
 bool FmuContainer::setReal(const fmi2ValueReference *vr, size_t nvr, const fmi2Real *value) {
     size_t expected_nvr = 1;
-    if(!isStateValid(FMIState::initialized, this->state)) {
+    if(!(this->state == FMIState::initialized || this->state == FMIState::initializing))
+    {
+        FmuContainer_LOG(fmi2Fatal, "logStatusFatal",
+                         "FMU is in the wrong state. Expected state: %s or %s - Actual state: %s",
+                         printFMIState(FMIState::initialized).c_str(), printFMIState(FMIState::initializing).c_str(), printFMIState(this->state).c_str());
+        this->state = FMIState::error;
         return false;
     }
     if (nvr != expected_nvr)
