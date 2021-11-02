@@ -104,7 +104,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     else {
         this->realOutput = this->realInput+1;
 
-
+        FmuContainer_LOG(fmi2OK, "logStatusOK",
+                         "Sleeping for: %d",
+                         this->sleep);
         std::this_thread::sleep_for(std::chrono::milliseconds (this->sleep));
         return true;
     }
