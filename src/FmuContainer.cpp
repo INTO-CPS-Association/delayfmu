@@ -102,7 +102,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         return false;
     }
     else {
-        this->realOutput = this->realInput+1;
+        this->counter++;
+        this->realOutput = this->realInput+this->counter;
 
         FmuContainer_LOG(fmi2OK, "logStatusOK",
                          "Sleeping for: %d",

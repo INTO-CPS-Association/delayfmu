@@ -79,6 +79,7 @@ private:
     int sleep;
     double realOutput = outputRealInitial;
     double realInput = inputRealInitial;
+    int counter = 0;
 
     FMIState state = FMIState::instantiated;
 
