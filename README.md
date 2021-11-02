@@ -17,5 +17,17 @@ Increments internal counter with 1.
 Transfers the input to the output and adds the internal counter. The reason for the addition is simply to see that something is actually happening.
 Afterwards, it sleeps for x milliseconds, see Delay.
 
+## Jacobian example
+A jacobian of 2 delay FMUs coupled with instance1.output -> instance2.input and instance2.out -> instance1.input
+will progress as:
+dostep (instance1.output = 1, instance2.output = 1)
+Shift output to input values
+dostep (instance1.output = 1+2=3, instance2.output=1+2=3)
+Shift output to input values
+dostep (isntance1.output=3+3=6, instance2.output=3+3=6)
+Shift output to input values
+dostep(instance1.output=6+4=10, instance2.output=6+4=10)
+and so forth.
+
 
 
