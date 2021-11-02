@@ -102,7 +102,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         return false;
     }
     else {
-        this->realOutput = this->realInput;
+        this->realOutput = this->realInput+1;
 
 
         std::this_thread::sleep_for(std::chrono::milliseconds (this->sleep));
