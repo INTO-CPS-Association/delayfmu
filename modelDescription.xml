@@ -32,7 +32,7 @@
     </ModelVariables>
     <ModelStructure>
         <Outputs>
-            <Unknown index="2"/>
+            <Unknown index="2" dependencies=""/>
         </Outputs>
         <InitialUnknowns>
             <Unknown index="2"/>
